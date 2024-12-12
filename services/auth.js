@@ -1,8 +1,6 @@
-// Servicio de Autenticación Extendido
 class AuthService {
   constructor() {
-    this.usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
-    this.currentUser = null;
+    this.baseUrl = "https://api.escuelajs.co/api/v1/users";
   }
 
   // Validaciones de registro
@@ -18,18 +16,11 @@ class AuthService {
     return regexContrasena.test(contrasena);
   }
 
-  registrarUsuario(correo, contrasena, repetirContrasena) {
+  // Registro de usuario mediante API
+  async registrarUsuario(nombre, correo, contrasena) {
     // Validaciones
     if (!this.validarCorreo(correo)) {
       throw new Error("Correo electrónico inválido");
-    }
-
-    if (this.usuarios.some((usuario) => usuario.correo === correo)) {
-      throw new Error("El correo ya está registrado");
-    }
-
-    if (contrasena !== repetirContrasena) {
-      throw new Error("Las contraseñas no coinciden");
     }
 
     if (!this.validarContrasena(contrasena)) {
@@ -38,67 +29,103 @@ class AuthService {
       );
     }
 
-    // Hashear contraseña (simulado)
-    const salt = this.generarSalt();
-    const contrasenaHash = this.hashContrasena(contrasena, salt);
+    try {
+      const response = await fetch(this.baseUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: nombre,
+          email: correo,
+          password: contrasena,
+          avatar: 'https://api.lorem.space/image/face?w=640&h=480&r=867'
+        })
+      });
 
-    const nuevoUsuario = {
-      id: Date.now(),
-      correo,
-      contrasena: contrasenaHash,
-      salt,
-      fechaRegistro: new Date().toISOString(),
-    };
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error al registrar usuario");
+      }
 
-    this.usuarios.push(nuevoUsuario);
-    localStorage.setItem("usuarios", JSON.stringify(this.usuarios));
+      const usuarioRegistrado = await response.json();
+      
+      // Guardar información básica en sessionStorage
+      sessionStorage.setItem('usuarioActual', JSON.stringify({
+        id: usuarioRegistrado.id,
+        nombre: usuarioRegistrado.name,
+        correo: usuarioRegistrado.email
+      }));
 
-    return nuevoUsuario;
+      return usuarioRegistrado;
+    } catch (error) {
+      console.error("Error en registro:", error);
+      throw error;
+    }
   }
 
-  login(correo, contrasena) {
-    const usuario = this.usuarios.find((u) => u.correo === correo);
+  // Login de usuario
+  async login(correo, contrasena) {
+    try {
+      const response = await fetch('https://api.escuelajs.co/api/v1/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: correo,
+          password: contrasena
+        })
+      });
 
-    if (!usuario) {
-      throw new Error("Usuario no encontrado");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Error en el inicio de sesión");
+      }
+
+      const loginData = await response.json();
+
+      // Obtener información del perfil del usuario
+      const profileResponse = await fetch('https://api.escuelajs.co/api/v1/auth/profile', {
+        headers: {
+          'Authorization': `Bearer ${loginData.access_token}`
+        }
+      });
+
+      if (!profileResponse.ok) {
+        throw new Error("No se pudo obtener la información del perfil");
+      }
+
+      const perfil = await profileResponse.json();
+
+      // Guardar información en sessionStorage
+      sessionStorage.setItem('usuarioActual', JSON.stringify({
+        id: perfil.id,
+        nombre: perfil.name,
+        correo: perfil.email,
+        token: loginData.access_token
+      }));
+
+      return perfil;
+    } catch (error) {
+      console.error("Error en login:", error);
+      throw error;
     }
-    if(correo=='pabletor0505@gmail.com' && contrasena=='1234'){
-      this.currentUser = usuario;
-      localStorage.setItem("usuarioActual", JSON.stringify(usuario));
-      return usuario
-    }
-
-    // Verificar contraseña hasheada
-    const contrasenaHash = this.hashContrasena(contrasena, usuario.salt);
-
-    if (contrasenaHash !== usuario.contrasena) {
-      throw new Error("Contraseña incorrecta");
-    }
-
-    this.currentUser = usuario;
-    localStorage.setItem("usuarioActual", JSON.stringify(usuario));
-
-    return usuario;
   }
 
+  // Cerrar sesión
   logout() {
-    this.currentUser = null;
-    localStorage.removeItem("usuarioActual");
+    sessionStorage.removeItem('usuarioActual');
   }
 
-  // Métodos de hashing (simulados)
-  generarSalt() {
-    return Math.random().toString(36).substring(2, 15);
+  // Obtener usuario actual
+  getCurrentUser() {
+    return JSON.parse(sessionStorage.getItem('usuarioActual'));
   }
 
-  hashContrasena(contrasena, salt) {
-    // Simulación de hashing (en producción, usar bcrypt o similar)
-    return btoa(contrasena + salt);
-  }
-
-  // Validación de tarjeta de crédito
+  // Validación de tarjeta de crédito (similar a la implementación anterior)
   validarTarjetaCredito(numero, fechaExpiracion, cvv, nombreTitular) {
-    // Validación de número de tarjeta (algoritmo de Luhn)
+    // Algoritmo de Luhn para validación de número de tarjeta
     const validarNumeroTarjeta = (numero) => {
       numero = numero.replace(/\s/g, "");
       if (!/^\d+$/.test(numero)) return false;
@@ -137,7 +164,7 @@ class AuthService {
 
     // Validación de nombre del titular (no debe contener letras minúsculas)
     const validarNombreTitular = (nombre) => {
-      return /^[^a-z]+$/.test(nombre); // Acepta solo caracteres que no sean letras minúsculas
+      return /^[^a-z]+$/.test(nombre);
     };
 
     return {
@@ -148,11 +175,13 @@ class AuthService {
     };
   }
 
+  // Procesamiento de pago
   procesarPago(datosPago) {
     const { numero, fechaExpiracion, cvv, nombreTitular, monto } = datosPago;
 
-    const validacion = this.validarTarjetaCredito(numero, fechaExpiracion, cvv);
+    const validacion = this.validarTarjetaCredito(numero, fechaExpiracion, cvv, nombreTitular);
 
+    // Validaciones
     if (!validacion.numeroValido) {
       throw new Error("Número de tarjeta inválido");
     }
@@ -165,6 +194,10 @@ class AuthService {
       throw new Error("CVV inválido");
     }
 
+    if (!validacion.nombreTitularValido) {
+      throw new Error("Nombre del titular inválido");
+    }
+
     // Simulación de procesamiento de pago
     return {
       estado: "APROBADO",
@@ -172,9 +205,5 @@ class AuthService {
       monto,
       fechaProcesamiento: new Date().toISOString(),
     };
-  }
-
-  getCurrentUser() {
-    return JSON.parse(localStorage.getItem("usuarioActual"));
   }
 }
