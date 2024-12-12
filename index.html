@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Tienda Online Avanzada</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header>
+        <h1>Mi Tienda Online</h1>
+        <nav id="filters">
+          <input type="text" id="search-input" placeholder="Buscar" />
+          <select id="category-filter">
+            <option value="">Cargando categorías...</option>
+          </select>
+          <select id="price-filter">
+            <option value="">Precio</option>
+            <option value="asc">Menor a Mayor</option>
+            <option value="desc">Mayor a Menor</option>
+          </select>
+        </nav>
+        <div class="header-controles">
+          <div id="cart-icon">🛒 <span id="cart-count">0</span></div>
+        </div>
+      </header>
+
+      <!-- Modales -->
+      <div id="login-modal" class="modal hidden">
+        <form id="login-form">
+          <h2>Iniciar Sesión</h2>
+          <input type="text" id="login-correo" placeholder="Correo" required />
+          <input
+            type="password"
+            id="login-contrasena"
+            placeholder="Contraseña"
+            required
+          />
+          <button type="submit">Iniciar Sesión</button>
+          <p>
+            ¿No tienes cuenta? <a href="#" id="mostrar-registro">Regístrate</a>
+          </p>
+        </form>
+      </div>
+
+      <div id="registro-modal" class="modal hidden">
+        <form id="registro-form">
+          <h2>Registro de Usuario</h2>
+          <input
+            type="email"
+            id="registro-correo"
+            placeholder="Correo electrónico"
+            required
+          />
+          <input
+            type="password"
+            id="registro-contrasena"
+            placeholder="Contraseña"
+            required
+          />
+          <input
+            type="password"
+            id="registro-repetir-contrasena"
+            placeholder="Repetir Contraseña"
+            required
+          />
+          <button type="submit">Registrarse</button>
+          <p>
+            ¿Ya tienes cuenta? <a href="#" id="mostrar-login">Inicia Sesión</a>
+          </p>
+        </form>
+      </div>
+
+      <div id="pago-modal" class="modal hidden">
+        <form id="pago-form">
+          <h2>Pagar</h2>
+          <input
+            type="text"
+            id="numero-tarjeta"
+            placeholder="Número de Tarjeta"
+            required
+          />
+          <div class="fila-pago">
+            <input
+              type="text"
+              id="fecha-expiracion"
+              placeholder="MM/AA"
+              required
+            />
+            <input type="text" id="cvv" placeholder="CVV" required />
+          </div>
+          <input
+            type="text"
+            id="nombre-titular"
+            placeholder="Nombre del Titular"
+            required
+          />
+          <div id="total-pago"></div>
+          <button type="submit">Pagar</button>
+        </form>
+      </div>
+
+      <main>
+        <section id="products-container"></section>
+        <!-- Product Details Modal -->
+        <div id="product-details-modal" class="modal hidden">
+          <div class="modal-content">
+            <span class="close" onclick="cerrarModal()">&times;</span>
+            <h2 class="modal-title"></h2>
+
+            <!-- Carrusel de imágenes -->
+            <div class="carrusel-contenedor">
+              <button
+                class="carrusel-anterior boton-carrusel"
+                style="display: none"
+              >
+                &#8249;
+              </button>
+              <!-- Aquí la imagen se configura con JavaScript -->
+              <img
+                id="producto-imagen"
+                class="imagen-activa"
+                src=""
+                alt="Producto"
+              />
+              <button
+                class="carrusel-siguiente boton-carrusel"
+                style="display: none"
+              >
+                &#8250;
+              </button>
+            </div>
+
+            <div class="modal-details">
+              <p class="modal-description"></p>
+              <div class="modal-price"></div>
+              <div class="modal-stock"></div>
+              <button class="modal-add-to-cart">Añadir al Carrito</button>
+            </div>
+          </div>
+        </div>
+
+        <button id="loadMore">Cargar más productos</button>
+        <div id="wifi-loader" class="hidden">
+          <div class="text" data-text="Searching"></div>
+        </div>
+        <section id="cart-container" class="hidden">
+          <h2>Carrito de Compras</h2>
+          <div id="cart-items"></div>
+          <div id="cart-total">Total: $0</div>
+          <button id="checkout-btn">Finalizar Compra</button>
+        </section>
+      </main>
+    </div>
+
+    <script src="services/api.js"></script>
+    <script src="services/auth.js"></script>
+    <script src="services/storage.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>

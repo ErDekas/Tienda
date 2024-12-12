@@ -1,0 +1,454 @@
+:root {
+  /* Color Palette - Amazon-inspired */
+  --primary-color: #232f3e;
+  --secondary-color: #febd69;
+  --text-primary: #111;
+  --text-secondary: #333;
+  --background-light: #f3f3f3;
+  --border-color: #e0e0e0;
+  
+  /* Typography */
+  --font-primary: 'Amazon Ember', Arial, sans-serif;
+  
+  /* Responsive Breakpoints */
+  --breakpoint-mobile: 576px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--background-light);
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+#app {
+  max-width: 1500px;
+  margin: 0 auto;
+}
+
+/* Header - Amazon Style */
+header {
+  background-color: var(--primary-color);
+  color: white;
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  padding: 10px 20px;
+  gap: 15px;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  color: white;
+  grid-column: 1;
+}
+
+#filters {
+  display: flex;
+  align-items: center;
+  grid-column: 2;
+  background-color: white;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 0 15px;
+}
+
+#search-input {
+  flex-grow: 1;
+  border: none;
+  padding: 10px;
+  font-size: 1rem;
+}
+
+#category-filter, 
+#price-filter {
+  padding: 10px;
+  border: none;
+  background-color: var(--background-light);
+}
+
+.header-controles {
+  display: flex;
+  align-items: center;
+  grid-column: 3 / 5;
+  gap: 15px;
+}
+
+#cart-icon {
+  display: flex;
+  align-items: center;
+  color: white;
+  font-size: 1.2rem;
+}
+
+#cart-count {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border-radius: 50%;
+  padding: 2px 6px;
+  margin-left: 5px;
+  font-size: 0.8rem;
+}
+
+/* Product Container */
+#products-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 20px;
+}
+
+.product-card {
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.3s ease;
+  position: relative;
+}
+
+.product-card:hover {
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.product-card img {
+  max-width: 100%;
+  height: 250px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.product-card .product-title {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  margin-bottom: 10px;
+  height: 3rem;
+  overflow: hidden;
+}
+
+.product-card .product-price {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #B12704;
+  margin-bottom: 10px;
+}
+
+.product-card .add-to-cart-btn {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  margin-top: auto;
+  transition: background-color 0.3s ease;
+}
+
+.product-card .add-to-cart-btn:hover {
+  background-color: #f3a847;
+}
+
+/* Load More Button */
+#loadMore {
+  display: block;
+  width: 200px;
+  margin: 20px auto;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+#loadMore:hover {
+  background-color: #364659;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+/* Responsive Adaptations */
+@media screen and (max-width: 768px) {
+  header {
+      grid-template-columns: 1fr;
+      text-align: center;
+  }
+
+  #filters {
+      margin: 10px 0;
+      width: 100%;
+  }
+
+  #products-container {
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      padding: 10px;
+  }
+}
+
+/* Loader */
+#wifi-loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100px;
+}
+
+/* Estilos para la ventana emergente (modal) */
+.modal {
+  display: none; /* Ocultamos la ventana emergente por defecto */
+  position: fixed;
+  flex-direction: column;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7); /* Fondo oscuro */
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  backdrop-filter: blur(5px); /* Efecto de desenfoque */
+}
+
+/* Contenido del modal */
+.modal-content {
+  background: rgba(255, 255, 255, 0.1); /* Fondo semitransparente */
+  padding: 30px;
+  border-radius: 10px;
+  max-width: 700px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Cerrar el modal */
+.close {
+  color: #aaa;
+  font-size: 28px;
+  font-weight: bold;
+  position: absolute;
+  top: 10px;
+  right: 25px;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.close:hover,
+.close:focus {
+  color: white;
+  text-decoration: none;
+}
+
+/* Estilo general para los botones */
+.boton-carrusel {
+  position: absolute;
+  top: 40%;
+  transform: translateY(-50%);
+  background-color: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  padding: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 10;
+}
+/* Estilos opcionales para el hover */
+.boton-carrusel:hover {
+  background-color: rgba(0, 0, 0, 0.8);
+}
+/* Alineación del botón siguiente (derecha) */
+.carrusel-siguiente {
+  right: 10px; /* Ajusta este valor según lo necesites */
+}
+
+/* Alineación del botón anterior (izquierda) */
+.carrusel-anterior {
+  left: 10px; /* Ajusta este valor según lo necesites */
+}
+
+/* Mostrar los botones cuando sea necesario */
+.carrusel-siguiente, .carrusel-anterior {
+  display: inline-block; /* Cambiar a inline-block cuando los botones se deben mostrar */
+}
+
+.modal-title {
+  color: #fff;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+/* Imagen del producto en el modal */
+.imagen-activa {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 300px;
+  object-fit: contain;
+  margin-bottom: 20px;
+  border-radius: 5px;
+}
+
+/* Detalles del producto en el modal */
+.modal-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  color: #fff;
+  width: 100%;
+  text-align: left;
+}
+
+.modal-details p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.modal-price {
+  font-size: 1.5rem;
+  color: var(--secondary-color);
+  font-weight: bold;
+}
+
+.modal-stock {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.modal-add-to-cart {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin-top: 15px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.modal-add-to-cart:hover {
+  background-color: #f3a847;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 768px) {
+  .modal-content {
+      width: 95%;
+      padding: 20px;
+  }
+
+  .close {
+      top: 5px;
+      right: 10px;
+  }
+}
+
+/* Modal de Pago */
+#pago-modal {
+  background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
+  display: none;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  overflow: auto;
+}
+
+#pago-form {
+  background-color: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#pago-form h2 {
+  text-align: center;
+  font-size: 1.5rem;
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+#pago-form input {
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  padding: 10px;
+  font-size: 1rem;
+  width: 100%;
+}
+
+#pago-form input:focus {
+  border-color: var(--secondary-color);
+  outline: none;
+  box-shadow: 0 0 5px rgba(254, 189, 105, 0.5);
+}
+
+.fila-pago {
+  display: flex;
+  gap: 10px;
+}
+
+.fila-pago input {
+  flex: 1;
+}
+
+#total-pago {
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--primary-color);
+  margin: 10px 0;
+}
+
+#pago-form button {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#pago-form button:hover {
+  background-color: #f3a847;
+}
