@@ -152,19 +152,20 @@ class OnlineStore {
         }
       });
     });
-    // Para cerrar los modales si es necesario
-    document.querySelectorAll(".modal").forEach((modal) => {
-      modal.addEventListener("click", (event) => {
-        if (event.target === modal) {
-          modal.classList.add("hidden");
-        }
-      });
-    });
     this.loginBtn.addEventListener("click", () => {
       console.log("Click en botón login");
       this.mostrarModalLogin();
     });
-
+    this.loginModal.addEventListener("click", (e) => {
+      if (e.target === this.loginModal) {
+        this.loginModal.style.display = "none";
+      }
+    });
+    this.registroModal.addEventListener("click", (e) => {
+      if (e.target === this.registroModal) {
+        this.registroModal.style.display = "none";
+      }
+    });
     // Register button event listener
     this.registerBtn.addEventListener("click", () => {
       console.log("Click en botón register");
