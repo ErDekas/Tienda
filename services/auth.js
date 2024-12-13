@@ -10,9 +10,8 @@ class AuthService {
   }
 
   validarContrasena(contrasena) {
-    // Mínimo 8 caracteres, una mayúscula, un número y un carácter especial
     const regexContrasena =
-      /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[@$!%*#.?&]).{8,}$/;
+      /^.{6,}$/;
     return regexContrasena.test(contrasena);
   }
 
@@ -25,7 +24,7 @@ class AuthService {
 
     if (!this.validarContrasena(contrasena)) {
       throw new Error(
-        "La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial"
+        "La contraseña debe tener al menos 6 caracteres"
       );
     }
 

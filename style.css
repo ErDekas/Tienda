@@ -221,7 +221,7 @@ header h1 {
 
 /* Estilos para la ventana emergente (modal) */
 .modal {
-  display: none; /* Ocultamos la ventana emergente por defecto */
+  display: flex; /* Ocultamos la ventana emergente por defecto */
   position: fixed;
   flex-direction: column;
   top: 0;
@@ -451,4 +451,142 @@ header h1 {
 
 #pago-form button:hover {
   background-color: #f3a847;
+}
+
+/* Login and Registration Form Styles */
+#login-modal .modal,
+#registro-modal .modal {
+  display: flex;
+}
+
+#login-form,
+#registro-form {
+  background-color: white;
+  border-radius: 8px;
+  padding: 30px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#login-form h2,
+#registro-form h2 {
+  text-align: center;
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+#login-form input,
+#registro-form input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+/* Validation Styles */
+#login-form input:valid,
+#registro-form input:valid {
+  border-color: #4CAF50;
+}
+
+#login-form input:invalid,
+#registro-form input:invalid {
+  border-color: #f44336;
+}
+
+#login-form input:focus,
+#registro-form input:focus {
+  outline: none;
+  border-color: var(--secondary-color);
+  box-shadow: 0 0 5px rgba(254, 189, 105, 0.5);
+}
+
+#login-form button,
+#registro-form button {
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+  border: none;
+  padding: 12px;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#login-form button:hover,
+#registro-form button:hover {
+  background-color: #f3a847;
+}
+
+#login-form p,
+#registro-form p {
+  text-align: center;
+  color: var(--text-secondary);
+  margin-top: 15px;
+}
+
+#login-form a,
+#registro-form a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+#login-form a:hover,
+#registro-form a:hover {
+  text-decoration: underline;
+}
+
+/* Password Mismatch Validation */
+#registro-form input:invalid:focus {
+  border-color: #f44336;
+}
+
+#registro-form #registro-repetir-contrasena:invalid ~ #registro-repetir-contrasena:valid {
+  border-color: #f44336;
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 768px) {
+  #login-form,
+  #registro-form {
+    width: 90%;
+    padding: 20px;
+  }
+}
+
+/* Custom Validation Messages */
+#login-form input:invalid:focus::after,
+#registro-form input:invalid:focus::after {
+  content: attr(data-error);
+  color: #f44336;
+  font-size: 0.8rem;
+  display: block;
+  margin-top: 5px;
+}
+
+.user-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.user-controls button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.user-controls button:hover {
+  background-color: #0056b3;
 }

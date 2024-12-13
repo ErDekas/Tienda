@@ -5,6 +5,8 @@ class OnlineStore {
     this.storageService = new StorageService();
 
     this.productos = [];
+    this.mostrarModal = false;
+    this.tipoModal = "login"; // or 'registro'
     this.loadCategories();
     this.carrito = this.storageService.getCart() || [];
     this.currentPage = 1; // Página actual para la paginación
@@ -35,9 +37,12 @@ class OnlineStore {
 
     // Elementos de control
     this.checkoutBtn = document.getElementById("checkout-btn");
+    this.loginBtn = document.getElementById("login-btn");
+    this.registerBtn = document.getElementById("register-btn");
     this.carritoItems = document.getElementById("cart-items");
     this.carritoTotal = document.getElementById("cart-total");
     this.contadorCarrito = document.getElementById("cart-count");
+    this.pagar = document.getElementById("pagar-btn");
     this.populateCategoryFilter();
 
     // Formularios
@@ -47,7 +52,26 @@ class OnlineStore {
   }
 
   setupEventListeners() {
-    this.loginForm.addEventListener("submit", (e) => this.handleLogin(e));
+    this.loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const correo = document.getElementById("login-correo").value;
+      const contrasena = document.getElementById("login-contrasena").value;
+
+      try {
+        await this.iniciarSesion(correo, contrasena);
+
+        // After successful login, check if there's a product waiting to be added
+        if (this.productoParaAgregar) {
+          this._agregarProductoAlCarrito(this.productoParaAgregar);
+          this.productoParaAgregar = null; // Reset
+        }
+
+        // Desbloquear acceso a la aplicación
+        this.desbloquearAccesoAplicacion();
+      } catch (error) {
+        alert(error.message);
+      }
+    });
     this.registroForm.addEventListener("submit", (e) => this.handleRegistro(e));
     if (this.loadMoreButton) {
       this.loadMoreButton.addEventListener("click", async () => {
@@ -79,35 +103,48 @@ class OnlineStore {
       .getElementById("mostrar-registro")
       .addEventListener("click", (e) => {
         e.preventDefault();
-        this.loginModal.classList.add("hidden");
-        this.registroModal.classList.remove("hidden");
+        this.mostrarModalRegistro();
       });
 
     document.getElementById("mostrar-login").addEventListener("click", (e) => {
       e.preventDefault();
-      this.registroModal.classList.add("hidden");
-      this.loginModal.classList.remove("hidden");
+      this.mostrarModalLogin();
     });
-
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
+    document.getElementById("pagar-btn").addEventListener("click", (e) => {
+      e.preventDefault();
+      this.procesarPago();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
         const pagoModal = document.getElementById("pago-modal");
-        if (pagoModal && pagoModal.style.display === 'flex') {
-          pagoModal.style.display = 'none';
+        if (pagoModal && pagoModal.style.display === "flex") {
+          pagoModal.style.display = "none";
         }
-        
+
         const detallesModal = document.getElementById("product-details-modal");
-        if (detallesModal && detallesModal.style.display === 'flex') {
+        if (detallesModal && detallesModal.style.display === "flex") {
           this.cerrarModal();
         }
       }
     });
-
-    this.checkoutBtn.addEventListener("click", (e) => {
-      e.preventDefault();
+    // Para cerrar los modales si es necesario
+    document.querySelectorAll(".modal").forEach((modal) => {
+      modal.addEventListener("click", (event) => {
+        if (event.target === modal) {
+          modal.classList.add("hidden");
+        }
+      });
+    });
+    this.loginBtn.addEventListener("click", () => {
+      console.log("Click en botón login");
       this.mostrarModalLogin();
     });
 
+    // Register button event listener
+    this.registerBtn.addEventListener("click", () => {
+      console.log("Click en botón register");
+      this.mostrarModalRegistro();
+    });
     this.checkoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
       this.iniciarProcesoCompra();
@@ -171,25 +208,16 @@ class OnlineStore {
   }
 
   checkInitialAccess() {
-    // Bloquear toda la aplicación por defecto
-    this.bloquearAccesoAplicacion();
-
-    // Verificar si hay un usuario guardado
     const usuarioGuardado = this.authService.getCurrentUser();
 
     if (usuarioGuardado) {
       try {
-        // Intentar iniciar sesión con el usuario guardado
         this.authService.currentUser = usuarioGuardado;
         this.desbloquearAccesoAplicacion();
         this.loadProducts();
       } catch (error) {
-        // Si falla la validación, mostrar login
         this.mostrarModalLogin();
       }
-    } else {
-      // No hay usuario guardado, mostrar login
-      this.mostrarModalLogin();
     }
   }
 
@@ -211,8 +239,21 @@ class OnlineStore {
   }
 
   mostrarModalLogin() {
-    this.bloquearAccesoAplicacion();
-    this.loginModal.classList.remove("hidden");
+    const loginModal = document.getElementById("login-modal");
+    loginModal.classList.remove("hidden");
+    console.log(
+      "Modal login visible:",
+      !loginModal.classList.contains("hidden")
+    );
+  }
+
+  mostrarModalRegistro() {
+    const registroModal = document.getElementById("registro-modal");
+    registroModal.classList.remove("hidden");
+    console.log(
+      "Modal registro visible:",
+      !registroModal.classList.contains("hidden")
+    );
   }
 
   async populateCategoryFilter() {
@@ -379,6 +420,11 @@ class OnlineStore {
       let indiceImagenActual = 0;
       imagenActiva.src = imagenesProducto[indiceImagenActual];
 
+      // Agregar evento onerror para cambiar la imagen por defecto si no se puede cargar
+      imagenActiva.onerror = () => {
+        imagenActiva.src = imagenPorDefecto;
+      };
+
       // Mostrar botones de navegación si hay más de una imagen
       botonAnterior.style.display =
         imagenesProducto.length > 1 ? "block" : "none";
@@ -396,6 +442,9 @@ class OnlineStore {
             imagenesProducto.length;
         }
         imagenActiva.src = imagenesProducto[indiceImagenActual];
+        imagenActiva.onerror = () => {
+          imagenActiva.src = imagenPorDefecto;
+        };
       };
 
       botonSiguiente.onclick = () => cambiarImagen("siguiente");
@@ -514,7 +563,65 @@ class OnlineStore {
     }
   }
 
+  handleRegistro(e) {
+    e.preventDefault();
+    const correo = document.getElementById("registro-correo").value;
+    const contrasena = document.getElementById("registro-contrasena").value;
+    const repetirContrasena = document.getElementById(
+      "registro-repetir-contrasena"
+    ).value;
+
+    // Validar que las contraseñas coincidan
+    if (contrasena !== repetirContrasena) {
+      alert("Las contraseñas no coinciden");
+      return;
+    }
+
+    try {
+      // Usar el método existente de registrarUsuario
+      this.registrarUsuario(correo, correo, contrasena)
+        .then((usuario) => {
+          // Ocultar modal de registro
+          this.registroModal.classList.add("hidden");
+
+          // Desbloquear acceso a la aplicación
+          this.desbloquearAccesoAplicacion();
+
+          // Intentar agregar el producto pendiente si existe
+          if (this.productoParaAgregar) {
+            this._agregarProductoAlCarrito(this.productoParaAgregar);
+            this.productoParaAgregar = null; // Reset
+          }
+        })
+        .catch((error) => {
+          alert(error.message);
+        });
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
   agregarAlCarrito(idProducto) {
+    // Close the product details modal first
+    this.cerrarModal();
+
+    // Check if user is logged in before adding to cart
+    const usuarioActual = this.authService.getCurrentUser();
+
+    if (!usuarioActual) {
+      // If not logged in, show login modal
+      this.mostrarModalLogin();
+
+      // Store the product ID to add to cart after login
+      this.productoParaAgregar = idProducto;
+
+      return;
+    }
+
+    this._agregarProductoAlCarrito(idProducto);
+  }
+
+  _agregarProductoAlCarrito(idProducto) {
     const producto = this.productos.find((p) => p.id === idProducto);
     const productoExistente = this.carrito.find((p) => p.id === idProducto);
 
@@ -530,6 +637,47 @@ class OnlineStore {
     }
 
     this.actualizarCarrito();
+  }
+
+  // Métodos para manejar login y registro
+  async iniciarSesion(correo, contrasena) {
+    try {
+      const usuario = await this.authService.login(correo, contrasena);
+      this.mostrarModal = false;
+      alert(`Bienvenido, ${usuario.name}!`);
+      // Cualquier lógica adicional después del login
+    } catch (error) {
+      alert(error.message);
+    }
+  }
+
+  async registrarUsuario(nombre, correo, contrasena) {
+    try {
+      const usuario = await this.authService.registrarUsuario(
+        nombre,
+        correo,
+        contrasena
+      );
+      this.mostrarModal = false;
+      alert(`Registro exitoso, bienvenido ${usuario.name}!`);
+
+      // Intentar agregar el producto pendiente si existe
+      if (this.productoParaAgregar) {
+        this._agregarProductoAlCarrito(this.productoParaAgregar);
+        this.productoParaAgregar = null; // Reset
+      }
+
+      return usuario;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Método para cerrar sesión
+  cerrarSesion() {
+    this.authService.logout();
+    // Lógica adicional después de cerrar sesión
+    alert("Sesión cerrada");
   }
 
   actualizarCarrito() {
@@ -604,11 +752,12 @@ class OnlineStore {
   }
 
   iniciarProcesoCompra() {
-    // if (!this.authService.currentUser) {
-    //   alert("Debes iniciar sesión para finalizar la compra");
-    //   this.loginModal.classList.remove("hidden");
-    //   return;
-    // }
+    // Check if user is logged in
+    if (!this.authService.getCurrentUser()) {
+      // If not logged in, show login modal and prevent checkout
+      this.mostrarModalLogin();
+      return;
+    }
 
     const compraValida = this.carrito.every((itemCarrito) => {
       const productoOriginal = this.productos.find(
@@ -639,19 +788,17 @@ class OnlineStore {
     }
   }
 
-  procesarPago(e) {
-    e.preventDefault();
-  
+  procesarPago() {
     const numero = document.getElementById("numero-tarjeta").value;
     const fechaExpiracion = document.getElementById("fecha-expiracion").value;
     const cvv = document.getElementById("cvv").value;
     const nombreTitular = document.getElementById("nombre-titular").value;
-  
+
     const totalCompra = this.carrito.reduce(
       (sum, producto) => sum + producto.precio * producto.cantidad,
       0
     );
-  
+
     try {
       const datosPago = {
         numero,
@@ -660,15 +807,15 @@ class OnlineStore {
         nombreTitular,
         monto: totalCompra,
       };
-  
+
       // Añadir console.log para debugging
       console.log("Datos de pago:", datosPago);
-  
+
       // Procesar pago
       const resultadoPago = this.authService.procesarPago(datosPago);
-  
+
       console.log("Resultado de pago:", resultadoPago);
-  
+
       if (resultadoPago.estado === "APROBADO") {
         // Actualizar stock de productos
         this.carrito.forEach((itemCarrito) => {
@@ -677,18 +824,18 @@ class OnlineStore {
           );
           productoOriginal.stock -= itemCarrito.cantidad;
         });
-  
+
         alert(
           `¡Compra realizada con éxito! ID de transacción: ${resultadoPago.transaccionId}`
         );
-  
+
         // Limpiar carrito en memoria y localStorage
-        this.carrito = []; 
-        this.storageService.clearCart(); 
-        
+        this.carrito = [];
+        this.storageService.clearCart();
+
         // Actualizar la interfaz
         this.actualizarCarrito();
-  
+
         // Ocultar modal de pago
         const pagoModal = document.getElementById("pago-modal");
         if (pagoModal) {
@@ -698,56 +845,6 @@ class OnlineStore {
     } catch (error) {
       console.error("Error en el pago:", error);
       alert(`Error en el pago: ${error.message}`);
-    }
-  }
-
-  handleLogin(e) {
-    e.preventDefault();
-    const correo = document.getElementById("login-correo").value;
-    const contrasena = document.getElementById("login-contrasena").value;
-
-    try {
-      const usuario = this.authService.login(correo, contrasena);
-      this.desbloquearAccesoAplicacion();
-      this.loadProducts();
-      this.actualizarCarrito();
-    } catch (error) {
-      alert(error.message);
-    }
-  }
-
-  handleRegistro(e) {
-    e.preventDefault();
-    const correo = document.getElementById("registro-correo").value;
-    const contrasena = document.getElementById("registro-contrasena").value;
-    const repetirContrasena = document.getElementById(
-      "registro-repetir-contrasena"
-    ).value;
-
-    try {
-      const nuevoUsuario = this.authService.registrarUsuario(
-        correo,
-        contrasena,
-        repetirContrasena
-      );
-      alert("Usuario registrado con éxito");
-
-      // Iniciar sesión automáticamente
-      this.authService.currentUser = nuevoUsuario;
-      this.desbloquearAccesoAplicacion();
-      this.loadProducts();
-    } catch (error) {
-      alert(error.message);
-    }
-  }
-
-  checkAuthStatus() {
-    const user =
-      this.authService.currentUser ||
-      JSON.parse(localStorage.getItem("usuarioActual"));
-    if (user) {
-      this.authService.currentUser = user;
-      this.loginModal.classList.add("hidden");
     }
   }
 }

@@ -22,11 +22,15 @@
         </nav>
         <div class="header-controles">
           <div id="cart-icon">🛒 <span id="cart-count">0</span></div>
+          <div class="user-controls">
+            <button id="login-btn">Iniciar Sesión</button>
+            <button id="register-btn">Registrarse</button>
+          </div>
         </div>
-      </header>
+      </header>      
 
       <!-- Modales -->
-      <div id="login-modal" class="modal hidden">
+      <div id="login-modal" class="modal">
         <form id="login-form">
           <h2>Iniciar Sesión</h2>
           <input type="text" id="login-correo" placeholder="Correo" required />
@@ -47,10 +51,17 @@
         <form id="registro-form">
           <h2>Registro de Usuario</h2>
           <input
+            type="text"
+            id="registro-nombre"
+            placeholder="Nombre de Usuario"
+            required
+          />
+          <input
             type="email"
             id="registro-correo"
             placeholder="Correo electrónico"
             required
+            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
           />
           <input
             type="password"
@@ -96,7 +107,7 @@
             required
           />
           <div id="total-pago"></div>
-          <button type="submit">Pagar</button>
+          <button type="submit" id="pagar-btn">Pagar</button>
         </form>
       </div>
 
@@ -156,6 +167,7 @@
     <script src="services/api.js"></script>
     <script src="services/auth.js"></script>
     <script src="services/storage.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
