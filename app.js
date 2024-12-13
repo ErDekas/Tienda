@@ -40,6 +40,7 @@ class OnlineStore {
     // Elementos de control
     this.checkoutBtn = document.getElementById("checkout-btn");
     this.loginBtn = document.getElementById("login-btn");
+    this.logoutBtn = document.getElementById("logout-btn");
     this.registerBtn = document.getElementById("register-btn");
     this.carritoItems = document.getElementById("cart-items");
     this.carritoTotal = document.getElementById("cart-total");
@@ -87,6 +88,7 @@ class OnlineStore {
         }
       });
     }
+    this.logoutBtn.addEventListener("click", () => this.cerrarSesion());
     // Filtro de categoría
     this.categoryFilter.addEventListener("change", async (e) => {
       const selectedCategory = e.target.value;
@@ -755,13 +757,22 @@ class OnlineStore {
   // Métodos para manejar login y registro
   async iniciarSesion(correo, contrasena) {
     try {
-      const usuario = await this.authService.login(correo, contrasena);
-      this.mostrarModal = false;
-      alert(`Bienvenido, ${usuario.name}!`);
+      if (correo === "admin@gmail.com" && contrasena === "admin") {
+        // Modo administrador: Ocultar app y mostrar admin
+        document.getElementById("app").style.display = "none";
+        document.getElementById("admin").style.display = "block";
+        alert("Bienvenido Administrador");
+      } else {
+        const usuario = await this.authService.login(correo, contrasena);
+        this.mostrarModal = false;
+        alert(`Bienvenido, ${usuario.name}!`);
+        this.loginBtn.style.display = "none";
+        this.logoutBtn.style.display = "block";
+      }
     } catch (error) {
       alert(error.message);
     }
-  }
+  }  
 
   async registrarUsuario(nombre, correo, contrasena) {
     try {
@@ -865,6 +876,8 @@ class OnlineStore {
   // Método para cerrar sesión
   cerrarSesion() {
     this.authService.logout();
+    this.logoutBtn.style.display = "none";
+    this.loginBtn.style.display = "block";
     // Lógica adicional después de cerrar sesión
     alert("Sesión cerrada");
   }

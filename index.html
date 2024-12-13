@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <title>Deka's Shop</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="admin.css" />
   </head>
   <body>
     <div id="app">
@@ -21,13 +22,16 @@
           </select>
         </nav>
         <div class="header-controles">
-          <div id="cart-icon">🛒 <a href="#" id="cart-link"><span id="cart-count">0</span></a></div>
+          <div id="cart-icon">
+            🛒 <a href="#" id="cart-link"><span id="cart-count">0</span></a>
+          </div>
           <div class="user-controls">
             <button id="login-btn">Iniciar Sesión</button>
+            <button id="logout-btn" class="cierreSesion">Cerrar Sesión</button>
             <button id="register-btn">Registrarse</button>
           </div>
         </div>
-      </header>      
+      </header>
 
       <!-- Modales -->
       <div id="login-modal" class="modal">
@@ -192,9 +196,24 @@
             <p>Teléfono: +34 622 86 44 27</p>
             <p>Correo: pabletor0505@gmail.com</p>
             <div class="redes-sociales">
-              <a href="https://github.com/ErDekas" target="_blank" class="social-icon">GitHub</a>
-              <a href="https://instagram.com/tudekas" target="_blank" class="social-icon">Instagram</a>
-              <a href="https://x.com/ErDekas" target="_blank" class="social-icon">Twitter</a>
+              <a
+                href="https://github.com/ErDekas"
+                target="_blank"
+                class="social-icon"
+                >GitHub</a
+              >
+              <a
+                href="https://instagram.com/tudekas"
+                target="_blank"
+                class="social-icon"
+                >Instagram</a
+              >
+              <a
+                href="https://x.com/ErDekas"
+                target="_blank"
+                class="social-icon"
+                >Twitter</a
+              >
             </div>
           </div>
           <div class="footer-column">
@@ -212,11 +231,90 @@
         </div>
       </footer>
     </div>
+    <div id="admin">
+      <div class="container-admin">
+        <!-- Sidebar -->
+        <aside class="sidebar-admin">
+          <div class="logo">Admin Dashboard</div>
+          <ul class="nav-menu-admin">
+            <li class="nav-item-admin active" data-section="products">Productos</li>
+            <li class="nav-item-admin" data-section="categories">Categorías</li>
+            <li class="nav-item-admin" data-section="users">Usuarios</li>
+          </ul>
+          <div class="logout-admin">
+            <button class="btn btn-danger" id="logoutButton" onclick="cerrarSesion()">Cerrar Sesión</button>
+          </div>
+        </aside>
 
+        <!-- Main Content -->
+        <main class="main-content-admin">
+          <div class="header-admin">
+            <h1 class="section-title-admin">Productos</h1>
+            <button class="btn btn-primary" id="addButton">
+              Agregar Nuevo
+            </button>
+          </div>
+
+          <div class="table-container">
+            <table id="dataTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Título</th>
+                  <th>Precio</th>
+                  <th>Categoría</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tableBody"></tbody>
+            </table>
+          </div>
+        </main>
+      </div>
+
+      <!-- Modal -->
+      <div class="modal-admin" id="formModal">
+        <div class="modal-content-admin">
+          <h2 id="modalTitle">Agregar Producto</h2>
+          <form id="itemForm">
+            <div class="form-group-admin">
+              <label for="title">Título</label>
+              <input type="text" id="title" required />
+            </div>
+            <div class="form-group-admin">
+              <label for="price">Precio</label>
+              <input type="number" id="price" required />
+            </div>
+            <div class="form-group-admin">
+              <label for="description">Descripción</label>
+              <textarea id="description" required></textarea>
+            </div>
+            <div class="form-group-admin">
+              <label for="category">Categoría</label>
+              <select id="category" required></select>
+            </div>
+            <div class="btn-group-admin">
+              <button
+                type="button"
+                class="btn btn-secondary-admin"
+                onclick="closeModal()"
+              >
+                Cancelar
+              </button>
+              <button type="submit" class="btn-admin btn-primary">Guardar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
     <script src="services/api.js"></script>
     <script src="services/auth.js"></script>
     <script src="services/storage.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"
+    ></script>
     <script src="app.js"></script>
+    <script src="admin.js"></script>
   </body>
 </html>
