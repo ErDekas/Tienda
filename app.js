@@ -28,7 +28,7 @@ class OnlineStore {
     this.productosContenedor = document.getElementById("products-container");
     this.loadMoreButton = document.getElementById("loadMore"); // Botón para cargar más
     this.loader = document.getElementById("wifi-loader"); // Referencia al loader
-    this.carritoContenedor = document.getElementById("cart-container");
+    this.carritoContenedor = document.getElementById("cart-modal");
 
     // Filtros
     this.searchInput = document.getElementById("search-input");
@@ -126,6 +126,29 @@ class OnlineStore {
           this.cerrarModal();
         }
       }
+    });
+    document.addEventListener("DOMContentLoaded", () => {
+      const cartLink = document.getElementById("cart-link");
+      const cartModal = document.getElementById("cart-modal");
+      const closeCartBtn = document.getElementById("close-cart");
+
+      // Open modal when clicking the cart link
+      cartLink.addEventListener("click", (e) => {
+        e.preventDefault();
+        cartModal.style.display = "flex";
+      });
+
+      // Close modal when clicking the close button
+      closeCartBtn.addEventListener("click", () => {
+        cartModal.style.display = "none";
+      });
+
+      // Close modal when clicking outside the modal content
+      cartModal.addEventListener("click", (e) => {
+        if (e.target === cartModal) {
+          cartModal.style.display = "none";
+        }
+      });
     });
     // Para cerrar los modales si es necesario
     document.querySelectorAll(".modal").forEach((modal) => {
@@ -232,7 +255,7 @@ class OnlineStore {
   desbloquearAccesoAplicacion() {
     // Mostrar secciones principales
     this.carritoContenedor.classList.remove("hidden");
-
+    this.loginModal.style.display = "none";
     // Ocultar modales de login
     this.loginModal.classList.add("hidden");
     this.registroModal.classList.add("hidden");
@@ -240,6 +263,7 @@ class OnlineStore {
 
   mostrarModalLogin() {
     const loginModal = document.getElementById("login-modal");
+    loginModal.style.display = "flex";
     loginModal.classList.remove("hidden");
     console.log(
       "Modal login visible:",
@@ -249,6 +273,7 @@ class OnlineStore {
 
   mostrarModalRegistro() {
     const registroModal = document.getElementById("registro-modal");
+    registroModal.style.display = "flex";
     registroModal.classList.remove("hidden");
     console.log(
       "Modal registro visible:",
@@ -645,7 +670,6 @@ class OnlineStore {
       const usuario = await this.authService.login(correo, contrasena);
       this.mostrarModal = false;
       alert(`Bienvenido, ${usuario.name}!`);
-      // Cualquier lógica adicional después del login
     } catch (error) {
       alert(error.message);
     }
@@ -660,6 +684,83 @@ class OnlineStore {
       );
       this.mostrarModal = false;
       alert(`Registro exitoso, bienvenido ${usuario.name}!`);
+      // Mandar correo de bienvenida
+      // Configuración inicial de EmailJS
+      (function () {
+        // Reemplaza "YOUR_PUBLIC_KEY" con tu clave pública de EmailJS
+        emailjs.init("77V4-gSSreUvCfKT8");
+      })();
+
+      // Función para enviar el email de confirmación de registro
+      const sendRegistrationEmail = async (userData) => {
+        try {
+          const response = await emailjs.send(
+            "service_vl9m76m", // Tu Service ID de EmailJS
+            "template_loraic8", // Tu Template ID
+            {
+              to_name: userData.nombre,
+              user_email: userData.correo,
+              // Puedes agregar más variables según tu template
+              // Por seguridad, no enviamos la contraseña por email
+            }
+          );
+
+          if (response.status === 200) {
+            console.log("¡Email de registro enviado exitosamente!");
+            return true;
+          }
+        } catch (error) {
+          console.error("Error al enviar el email de registro:", error);
+          return false;
+        }
+      };
+
+      // Manejo del formulario de registro
+      document
+        .getElementById("registro-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+
+          // Obtener los valores del formulario
+          const nombre = document.getElementById("registro-nombre").value;
+          const correo = document.getElementById("registro-correo").value;
+          const contrasena = document.getElementById(
+            "registro-contrasena"
+          ).value;
+          const repetirContrasena = document.getElementById(
+            "registro-repetir-contrasena"
+          ).value;
+
+          // Validar que las contraseñas coincidan
+          if (contrasena !== repetirContrasena) {
+            alert("Las contraseñas no coinciden");
+            return;
+          }
+
+          // Crear objeto con los datos del usuario
+          const userData = {
+            nombre: nombre,
+            correo: correo,
+          };
+
+          // Enviar email de confirmación
+          sendRegistrationEmail(userData).then((success) => {
+            if (success) {
+              alert(
+                "¡Registro exitoso! Te hemos enviado un correo de confirmación."
+              );
+              this.reset();
+              // Aquí puedes agregar código para cerrar el modal si lo deseas
+              document.getElementById("registro-modal").classList.add("hidden");
+            } else {
+              alert(
+                "Hubo un error al procesar tu registro. Por favor, intenta nuevamente."
+              );
+            }
+          });
+
+          // Aquí puedes agregar el código para guardar los datos del usuario en tu base de datos
+        });
 
       // Intentar agregar el producto pendiente si existe
       if (this.productoParaAgregar) {
@@ -685,21 +786,19 @@ class OnlineStore {
       .map(
         (producto) => `
                 <div class="carrito-item">
-                    ${producto.nombre} - $${producto.precio.toFixed(2)} x ${
-          producto.cantidad
-        }
+                   ${producto.nombre} - $${producto.precio.toFixed(2)} x ${producto.cantidad}
                     <div class="carrito-controles">
-                        <button onclick="store.reducirCantidad(${
-                          producto.id
-                        })">-</button>
-                        <button onclick="store.aumentarCantidad(${
-                          producto.id
-                        })">+</button>
-                        <button onclick="store.eliminarDelCarrito(${
-                          producto.id
-                        })">🗑️</button>
+                      <button class="btn-control btn-reducir" onclick="store.reducirCantidad(${producto.id})">
+                        &#x2796; <!-- Símbolo de menos -->
+                      </button>
+                      <span class="cantidad">${producto.cantidad}</span>
+                      <button class="btn-control btn-aumentar" onclick="store.aumentarCantidad(${producto.id})">
+                        &#x2795; <!-- Símbolo de más -->
+                      </button>
+                      <button class="btn-control btn-eliminar" onclick="store.eliminarDelCarrito(${producto.id})">
+                        &#x1F5D1; <!-- Icono de papelera -->
+                      </button>
                     </div>
-                </div>
             `
       )
       .join("");
@@ -758,7 +857,7 @@ class OnlineStore {
       this.mostrarModalLogin();
       return;
     }
-
+    this.carritoContenedor.style.display = "flex";
     const compraValida = this.carrito.every((itemCarrito) => {
       const productoOriginal = this.productos.find(
         (p) => p.id === itemCarrito.id
@@ -828,7 +927,87 @@ class OnlineStore {
         alert(
           `¡Compra realizada con éxito! ID de transacción: ${resultadoPago.transaccionId}`
         );
+        // Configuración inicial de EmailJS
+        (function () {
+          // Reemplaza "YOUR_PUBLIC_KEY" con tu clave pública de EmailJS
+          emailjs.init("77V4-gSSreUvCfKT8");
+        })();
 
+        // Función para enviar el email de confirmación de compra
+        const sendPurchaseConfirmationEmail = async (purchaseData) => {
+          try {
+            const response = await emailjs.send(
+              "service_vl9m76m", // Tu Service ID de EmailJS
+              "template_zhsjskh", // Tu Template ID para confirmación de compra
+              {
+                to_name: purchaseData.nombre,
+                user_email: purchaseData.correo,
+                order_id: purchaseData.idPedido,
+                total_amount: purchaseData.montoTotal,
+                items: purchaseData.articulos, // Si los artículos se envían como una lista, ajusta el template para recibirlos correctamente
+              }
+            );
+
+            if (response.status === 200) {
+              console.log(
+                "¡Email de confirmación de compra enviado exitosamente!"
+              );
+              return true;
+            }
+          } catch (error) {
+            console.error(
+              "Error al enviar el email de confirmación de compra:",
+              error
+            );
+            return false;
+          }
+        };
+
+        // Función para manejar el proceso después de una compra
+        const handlePurchase = async (purchaseDetails) => {
+          // Datos de ejemplo del pedido
+          const purchaseData = {
+            nombre: purchaseDetails.nombre,
+            correo: purchaseDetails.correo,
+            idPedido: purchaseDetails.idPedido,
+            montoTotal: purchaseDetails.montoTotal,
+            articulos: purchaseDetails.articulos.map(
+              (item) => `\n- ${item.cantidad} x ${item.nombre}`
+            ),
+          };
+
+          // Enviar email de confirmación de compra
+          const emailSent = await sendPurchaseConfirmationEmail(purchaseData);
+          if (emailSent) {
+            alert(
+              "¡Gracias por tu compra! Te hemos enviado un correo de confirmación."
+            );
+            // Aquí puedes agregar lógica adicional, como redirigir a una página de agradecimiento
+          } else {
+            alert(
+              "Hubo un problema al enviar el correo de confirmación. Por favor, revisa tu compra."
+            );
+          }
+        };
+
+        // Ejemplo de llamada a la función handlePurchase cuando se completa una compra
+        const completarCompra = () => {
+          const purchaseDetails = {
+            nombre: "Juan Pérez",
+            correo: "juan.perez@example.com",
+            idPedido: "12345",
+            montoTotal: "$150.00",
+            articulos: [
+              { nombre: "Producto A", cantidad: 2 },
+              { nombre: "Producto B", cantidad: 1 },
+            ],
+          };
+
+          handlePurchase(purchaseDetails);
+        };
+
+        // Llamar a la función completarCompra cuando se completa la compra
+        completarCompra();
         // Limpiar carrito en memoria y localStorage
         this.carrito = [];
         this.storageService.clearCart();

@@ -21,7 +21,7 @@
           </select>
         </nav>
         <div class="header-controles">
-          <div id="cart-icon">🛒 <span id="cart-count">0</span></div>
+          <div id="cart-icon">🛒 <a href="#" id="cart-link"><span id="cart-count">0</span></a></div>
           <div class="user-controls">
             <button id="login-btn">Iniciar Sesión</button>
             <button id="register-btn">Registrarse</button>
@@ -155,13 +155,60 @@
         <div id="wifi-loader" class="hidden">
           <div class="text" data-text="Searching"></div>
         </div>
-        <section id="cart-container" class="hidden">
-          <h2>Carrito de Compras</h2>
-          <div id="cart-items"></div>
-          <div id="cart-total">Total: $0</div>
-          <button id="checkout-btn">Finalizar Compra</button>
-        </section>
+        <div id="cart-modal" class="modal hidden">
+          <div class="modal-content">
+            <span class="close-btn" id="close-cart"></span>
+            <h2>Carrito de Compras</h2>
+            <div id="cart-items"></div>
+            <div id="cart-total">Total: $0</div>
+            <button id="checkout-btn">Finalizar Compra</button>
+          </div>
+        </div>
       </main>
+      <footer class="page-footer">
+        <div class="footer-container">
+          <div class="footer-column">
+            <h4>Navegación</h4>
+            <ul>
+              <li><a href="#">Inicio</a></li>
+              <li><a href="#">Productos</a></li>
+              <li><a href="#">Categorías</a></li>
+              <li><a href="#">Ofertas</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h4>Servicio al Cliente</h4>
+            <ul>
+              <li><a href="#">Preguntas Frecuentes</a></li>
+              <li><a href="#">Política de Devoluciones</a></li>
+              <li><a href="#">Contacto</a></li>
+              <li><a href="#">Seguimiento de Pedidos</a></li>
+            </ul>
+          </div>
+          <div class="footer-column">
+            <h4>Contáctanos</h4>
+            <p>Teléfono: +57 (123) 456-7890</p>
+            <p>Correo: servicio@mitiendaonline.com</p>
+            <div class="redes-sociales">
+              <a href="#" class="social-icon">Facebook</a>
+              <a href="#" class="social-icon">Instagram</a>
+              <a href="#" class="social-icon">Twitter</a>
+            </div>
+          </div>
+          <div class="footer-column">
+            <h4>Información Legal</h4>
+            <ul>
+              <li><a href="#">Términos de Servicio</a></li>
+              <li><a href="#">Política de Privacidad</a></li>
+              <li><a href="#">Política de Cookies</a></li>
+              <li><a href="#">Protección de Datos</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <p>&copy; 2024 Mi Tienda Online. Todos los derechos reservados.</p>
+        </div>
+      </footer>
     </div>
 
     <script src="services/api.js"></script>
