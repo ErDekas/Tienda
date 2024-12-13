@@ -15,6 +15,8 @@ class OnlineStore {
     this.loadedProductIds = new Set(); // Almacenar IDs ya cargados
 
     this.initializeDOM();
+    // Actualizar el contador del carrito inmediatamente después de inicializar el DOM
+    this.actualizarCarrito();
     this.setupEventListeners();
     this.setupInfiniteScroll();
     this.checkInitialAccess();
@@ -26,8 +28,8 @@ class OnlineStore {
     this.loginModal = document.getElementById("login-modal");
     this.registroModal = document.getElementById("registro-modal");
     this.productosContenedor = document.getElementById("products-container");
-    this.loadMoreButton = document.getElementById("loadMore"); // Botón para cargar más
-    this.loader = document.getElementById("wifi-loader"); // Referencia al loader
+    this.loadMoreButton = document.getElementById("loadMore");
+    this.loader = document.getElementById("wifi-loader");
     this.carritoContenedor = document.getElementById("cart-modal");
 
     // Filtros
@@ -176,9 +178,8 @@ class OnlineStore {
 
   setupInfiniteScroll() {
     window.addEventListener("scroll", async () => {
-      const { scrollTop, scrollHeight, clientHeight } =
-        document.documentElement;
-
+      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+  
       if (
         scrollTop + clientHeight >= scrollHeight - 50 &&
         !this.isLoading &&
@@ -187,19 +188,24 @@ class OnlineStore {
         this.isLoading = true;
         this.showLoader();
         this.currentPage++;
-        await this.loadProducts(this.currentPage);
-        this.isLoading = false;
-        this.hideLoader();
+        
+        try {
+          await this.loadProducts(this.currentPage);
+        } catch (error) {
+          console.error("Error en scroll infinito:", error);
+          this.hideLoader();
+          this.isLoading = false;
+        }
       }
     });
   }
 
   showLoader() {
-    this.loader.classList.remove("hidden");
+    this.loader.style.display = "flex";
   }
 
   hideLoader() {
-    this.loader.classList.add("hidden");
+    this.loader.style.display = "none";
   }
 
   applyFilters() {
@@ -232,15 +238,36 @@ class OnlineStore {
 
   checkInitialAccess() {
     const usuarioGuardado = this.authService.getCurrentUser();
-
+  
     if (usuarioGuardado) {
       try {
         this.authService.currentUser = usuarioGuardado;
         this.desbloquearAccesoAplicacion();
-        this.loadProducts();
+        // Ensure loadProducts is called with the initial page
+        this.loadProducts(1)
+          .then(() => {
+            // Hide loader after initial load
+            this.hideLoader();
+          })
+          .catch((error) => {
+            console.error("Error loading initial products:", error);
+            this.hideLoader(); // Ensure loader is hidden even if there's an error
+            this.mostrarModalLogin();
+          });
       } catch (error) {
         this.mostrarModalLogin();
+        this.hideLoader();
       }
+    } else {
+      // If no user is saved, still try to load products
+      this.loadProducts(1)
+        .then(() => {
+          this.hideLoader();
+        })
+        .catch((error) => {
+          console.error("Error loading initial products:", error);
+          this.hideLoader();
+        });
     }
   }
 
@@ -303,20 +330,23 @@ class OnlineStore {
 
   async loadProducts(page = 1, category = "") {
     try {
-      // Llamar a la API con filtro de categoría si existe
-      const nuevosProductos = await this.apiService.fetchProducts(
-        page,
-        10,
-        category
-      );
-
+      this.isLoading = true;
+      this.showLoader(); // Always show loader at start
+  
+      const nuevosProductos = await this.apiService.fetchProducts(page, 10, category);
+  
       if (page === 1) {
-        this.productosContenedor.innerHTML = ""; // Limpiar el contenedor si es la primera página
-        this.loadedProductIds.clear(); // Reiniciar el set de IDs cargados
+        this.productosContenedor.innerHTML = ''; 
+        this.loadedProductIds.clear();
       }
-
+  
       if (nuevosProductos.length === 0) {
         this.hasMoreProducts = false;
+        this.hideLoader(); // Hide loader if no products
+        
+        if (page === 1) {
+          this.productosContenedor.innerHTML = '<p>No hay productos disponibles.</p>';
+        }
         return;
       }
 
@@ -324,16 +354,22 @@ class OnlineStore {
       const productosFiltrados = nuevosProductos.filter(
         (producto) => !this.loadedProductIds.has(producto.id)
       );
-
-      productosFiltrados.forEach((producto) =>
+  
+      productosFiltrados.forEach((producto) => 
         this.loadedProductIds.add(producto.id)
       );
       this.productos.push(...productosFiltrados);
-
+  
       this.renderizarProductos(productosFiltrados);
+  
+      // Hide loader after successful load
+      this.hideLoader();
+      this.isLoading = false;
     } catch (error) {
       console.error("Error al cargar productos:", error);
       alert("Error al cargar productos. Por favor, inténtalo de nuevo.");
+      this.hideLoader();
+      this.isLoading = false;
     }
   }
 
