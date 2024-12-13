@@ -178,8 +178,9 @@ class OnlineStore {
 
   setupInfiniteScroll() {
     window.addEventListener("scroll", async () => {
-      const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-  
+      const { scrollTop, scrollHeight, clientHeight } =
+        document.documentElement;
+
       if (
         scrollTop + clientHeight >= scrollHeight - 50 &&
         !this.isLoading &&
@@ -188,7 +189,7 @@ class OnlineStore {
         this.isLoading = true;
         this.showLoader();
         this.currentPage++;
-        
+
         try {
           await this.loadProducts(this.currentPage);
         } catch (error) {
@@ -238,7 +239,7 @@ class OnlineStore {
 
   checkInitialAccess() {
     const usuarioGuardado = this.authService.getCurrentUser();
-  
+
     if (usuarioGuardado) {
       try {
         this.authService.currentUser = usuarioGuardado;
@@ -332,20 +333,25 @@ class OnlineStore {
     try {
       this.isLoading = true;
       this.showLoader(); // Always show loader at start
-  
-      const nuevosProductos = await this.apiService.fetchProducts(page, 10, category);
-  
+
+      const nuevosProductos = await this.apiService.fetchProducts(
+        page,
+        10,
+        category
+      );
+
       if (page === 1) {
-        this.productosContenedor.innerHTML = ''; 
+        this.productosContenedor.innerHTML = "";
         this.loadedProductIds.clear();
       }
-  
+
       if (nuevosProductos.length === 0) {
         this.hasMoreProducts = false;
         this.hideLoader(); // Hide loader if no products
-        
+
         if (page === 1) {
-          this.productosContenedor.innerHTML = '<p>No hay productos disponibles.</p>';
+          this.productosContenedor.innerHTML =
+            "<p>No hay productos disponibles.</p>";
         }
         return;
       }
@@ -354,14 +360,14 @@ class OnlineStore {
       const productosFiltrados = nuevosProductos.filter(
         (producto) => !this.loadedProductIds.has(producto.id)
       );
-  
-      productosFiltrados.forEach((producto) => 
+
+      productosFiltrados.forEach((producto) =>
         this.loadedProductIds.add(producto.id)
       );
       this.productos.push(...productosFiltrados);
-  
+
       this.renderizarProductos(productosFiltrados);
-  
+
       // Hide loader after successful load
       this.hideLoader();
       this.isLoading = false;
@@ -391,28 +397,28 @@ class OnlineStore {
 
   renderizarProductos(nuevosProductos, limpiar = false) {
     if (limpiar) {
-      this.productosContenedor.innerHTML = ""; // Limpiar productos existentes
+      this.productosContenedor.innerHTML = "";
     }
 
-    const imagenPorDefecto = "https://placehold.co/300x400?text=Without+Image"; // Cambia esto a la ruta de tu imagen por defecto
+    const imagenPorDefecto = "https://placehold.co/300x400?text=Without+Image";
 
     const productosHTML = nuevosProductos
-      .map(
-        (producto) => `
-        <div class="product-card ${
-          producto.stock === 0 ? "sin-stock" : ""
-        }" onclick="store.mostrarDetallesProducto(${producto.id})">
-            <img 
-                src="${producto.imagen}" 
-                alt="${producto.nombre}" 
-                onerror="this.onerror=null;this.src='${imagenPorDefecto}';"
-            >
-            <h3>${producto.nombre}</h3>
-            <p>$${producto.precio.toFixed(2)}</p>
-            <p>Stock: ${producto.stock}</p>
-        </div>
-      `
-      )
+      .map((producto) => {
+        const stockDisponible = this.obtenerStockDisponible(producto.id);
+        return `
+          <div class="product-card ${stockDisponible === 0 ? "sin-stock" : ""}" 
+               onclick="store.mostrarDetallesProducto(${producto.id})">
+              <img 
+                  src="${producto.imagen}" 
+                  alt="${producto.nombre}" 
+                  onerror="this.onerror=null;this.src='${imagenPorDefecto}';"
+              >
+              <h3>${producto.nombre}</h3>
+              <p>$${producto.precio.toFixed(2)}</p>
+              <p>Stock: ${stockDisponible}</p>
+          </div>
+        `;
+      })
       .join("");
 
     this.productosContenedor.insertAdjacentHTML("beforeend", productosHTML);
@@ -461,7 +467,9 @@ class OnlineStore {
     modalTitle.textContent = producto.nombre;
     modalDescription.textContent = producto.descripcion;
     modalPrice.textContent = `$${producto.precio.toFixed(2)}`;
-    modalStock.textContent = `Stock: ${producto.stock}`;
+    modalStock.textContent = `Stock: ${this.obtenerStockDisponible(
+      idProducto
+    )}`;
 
     // Configurar botón de añadir al carrito
     addToCartButton.onclick = () => this.agregarAlCarrito(producto.id);
@@ -686,18 +694,61 @@ class OnlineStore {
     const producto = this.productos.find((p) => p.id === idProducto);
     const productoExistente = this.carrito.find((p) => p.id === idProducto);
 
+    // Check if we have enough stock
+    const stockActual = this.obtenerStockDisponible(idProducto);
+
+    if (stockActual <= 0) {
+      alert("No hay stock disponible");
+      return;
+    }
+
     if (productoExistente) {
-      if (productoExistente.cantidad < producto.stock) {
+      if (productoExistente.cantidad < stockActual) {
         productoExistente.cantidad++;
+        this.actualizarVistaStock(idProducto);
       } else {
         alert("No hay más stock disponible");
         return;
       }
     } else {
       this.carrito.push({ ...producto, cantidad: 1 });
+      this.actualizarVistaStock(idProducto);
     }
 
     this.actualizarCarrito();
+  }
+
+  // New method to calculate available stock
+  obtenerStockDisponible(idProducto) {
+    const producto = this.productos.find((p) => p.id === idProducto);
+    const itemCarrito = this.carrito.find((p) => p.id === idProducto);
+    const cantidadEnCarrito = itemCarrito ? itemCarrito.cantidad : 0;
+    return producto.stock - cantidadEnCarrito;
+  }
+
+  // New method to update stock display
+  actualizarVistaStock(idProducto) {
+    const stockDisponible = this.obtenerStockDisponible(idProducto);
+
+    // Update stock in product cards
+    const productCards = document.querySelectorAll(".product-card");
+    productCards.forEach((card) => {
+      if (card.getAttribute("onclick")?.includes(`${idProducto}`)) {
+        const stockElement = card.querySelector("p:last-child");
+        if (stockElement) {
+          stockElement.textContent = `Stock: ${stockDisponible}`;
+        }
+      }
+    });
+
+    // Update stock in product details modal if it's open
+    const modalStock = document.querySelector(".modal-stock");
+    if (
+      modalStock &&
+      document.getElementById("product-details-modal").style.display === "flex"
+    ) {
+      modalStock.textContent = `Stock: ${stockDisponible}`;
+    }
   }
 
   // Métodos para manejar login y registro
@@ -822,16 +873,24 @@ class OnlineStore {
       .map(
         (producto) => `
                 <div class="carrito-item">
-                   ${producto.nombre} - $${producto.precio.toFixed(2)} x ${producto.cantidad}
+                   ${producto.nombre} - $${producto.precio.toFixed(2)} x ${
+          producto.cantidad
+        }
                     <div class="carrito-controles">
-                      <button class="btn-control btn-reducir" onclick="store.reducirCantidad(${producto.id})">
+                      <button class="btn-control btn-reducir" onclick="store.reducirCantidad(${
+                        producto.id
+                      })">
                         &#x2796; <!-- Símbolo de menos -->
                       </button>
                       <span class="cantidad">${producto.cantidad}</span>
-                      <button class="btn-control btn-aumentar" onclick="store.aumentarCantidad(${producto.id})">
+                      <button class="btn-control btn-aumentar" onclick="store.aumentarCantidad(${
+                        producto.id
+                      })">
                         &#x2795; <!-- Símbolo de más -->
                       </button>
-                      <button class="btn-control btn-eliminar" onclick="store.eliminarDelCarrito(${producto.id})">
+                      <button class="btn-control btn-eliminar" onclick="store.eliminarDelCarrito(${
+                        producto.id
+                      })">
                         &#x1F5D1; <!-- Icono de papelera -->
                       </button>
                     </div>
@@ -857,32 +916,35 @@ class OnlineStore {
     }
   }
 
+  aumentarCantidad(idProducto) {
+    const producto = this.carrito.find((p) => p.id === idProducto);
+    const stockDisponible = this.obtenerStockDisponible(idProducto);
+
+    if (stockDisponible > 0) {
+      producto.cantidad++;
+      this.actualizarCarrito();
+      this.actualizarVistaStock(idProducto);
+    } else {
+      alert("No hay más stock disponible");
+    }
+  }
+
   reducirCantidad(idProducto) {
     const producto = this.carrito.find((p) => p.id === idProducto);
     if (producto.cantidad > 1) {
       producto.cantidad--;
+      this.actualizarVistaStock(idProducto);
     } else {
       this.eliminarDelCarrito(idProducto);
     }
     this.actualizarCarrito();
   }
 
-  aumentarCantidad(idProducto) {
-    const producto = this.carrito.find((p) => p.id === idProducto);
-    const productoOriginal = this.productos.find((p) => p.id === idProducto);
-
-    if (producto.cantidad < productoOriginal.stock) {
-      producto.cantidad++;
-      this.actualizarCarrito();
-    } else {
-      alert("No hay más stock disponible");
-    }
-  }
-
   eliminarDelCarrito(idProducto) {
     this.carrito = this.carrito.filter(
       (producto) => producto.id !== idProducto
     );
+    this.actualizarVistaStock(idProducto);
     this.actualizarCarrito();
   }
 
